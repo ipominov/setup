@@ -1,0 +1,7 @@
+[setup]
+server     ansible_host=194.31.174.174 ansible_user="root" ansible_password="*"
+
+#[setup]
+#server     ansible_host=194.31.174.174 ansible_user="root" ansible_password="*"
+
+[setup:vars]
