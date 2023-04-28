@@ -1,0 +1,95 @@
+---
+
+- name: Upgrade apt cache
+  apt:
+    update_cache: yes
+  tags:
+    - always
+
+- name: Install some packages
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - curl
+    - htop
+    - sudo
+    - python3-psycopg2
+    - zip
+    - pip
+  tags:
+    - never
+    - debian
+
+- name: install postgres on debian
+  apt:
+    name: "{{ item }}"
+    state: present
+  loop:
+    - postgresql
+    - postgresql-contrib
+  tags:
+    - never
+    - debian
+
+- name: config edits
+  lineinfile:
+    path: /etc/postgresql/13/main/postgresql.conf
+    regexp: '^#listen_a'
+    line: "listen_addresses = '*'"
+  tags:
+    - always
+
+- name: config edits2
+  lineinfile:
+    path: /etc/postgresql/13/main/pg_hba.conf
+    regexp: '^host    all             all             127.0.0.1/32            md5'
+    line: "host    all             all             {{ postgres_subnet }}         md5" 
+  tags:
+    - always
+
+- name: config edits3
+  lineinfile:
+    path: /etc/postgresql/13/main/pg_hba.conf
+    regexp: '^local   all             postgres                                peer'
+    line: "#local all postgres peer" 
+  tags:
+    - always
+
+- name: Check if pg ansible tmp directory is alreasy exist
+  stat:
+    path: /var/lib/postgresql/.ansible/tmp
+  register: pga_dir
+  tags:
+    - always
+
+- name: Create a tmp directory (if not exist yet)
+  file:
+    path: /var/lib/postgresql/.ansible/tmp
+    state: directory
+    owner: postgres
+    group: postgres
+    mode: '0755'
+  when: not pga_dir.stat.exists
+  tags:
+    - always
+
+- name: Create new postgres user
+  become: yes
+  become_user: postgres
+  postgresql_user:
+    name: "{{ postgres_user }}"
+    password: "{{ postgres_pass }}"
+    role_attr_flags: "{{ postgres_priv }}"
+    encrypted: yes
+    state: present
+  tags:
+    - always
+
+- name: restart postgres service again
+  systemd:
+    name: postgresql
+    state: restarted
+    enabled: yes
+  tags:
+    - always

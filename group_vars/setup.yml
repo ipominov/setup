@@ -1,3 +1,6 @@
 ---
 
-
+postgres_user: "postuser"
+postgres_pass: "321654987"
+postgres_priv: "CREATEDB,SUPERUSER,CREATEROLE"
+postgres_subnet:  "192.168.0.0/24"
