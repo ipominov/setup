@@ -52,7 +52,7 @@
   lineinfile:
     path: /etc/postgresql/13/main/pg_hba.conf
     regexp: '^local   all             postgres                                peer'
-    line: "#local all postgres peer" 
+    line: "local all postgres md5" 
   tags:
     - always
 
